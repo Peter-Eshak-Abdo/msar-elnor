@@ -33,6 +33,8 @@ mobile/android/app/release/
 mobile/android/key.properties
 *.jks
 *.keystore
+*.apk
+*.aab
 google-services.json
 GoogleService-Info.plist
 
