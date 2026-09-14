@@ -1,0 +1,46 @@
+# Environment Variables & Secrets (CRITICAL SECURITY)
+.env
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+*.cert
+
+# Node & Next.js
+node_modules/
+web/node_modules/
+web/.next/
+web/out/
+web/build/
+web/*.tsbuildinfo
+web/npm-debug.log*
+web/.vercel/
+
+# Flutter & Dart
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.pub/
+mobile/.pub-cache/
+mobile/build/
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/app/debug/
+mobile/android/app/profile/
+mobile/android/app/release/
+mobile/android/key.properties
+*.jks
+*.keystore
+google-services.json
+GoogleService-Info.plist
+
+# System & IDE files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+*.iml
