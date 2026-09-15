@@ -40,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // Recheck accessibility permission whenever returning to app
+      // Recheck accessibility and device admin permissions whenever returning to app
       context.read<BlockerProvider>().checkPermissions();
     }
   }
@@ -195,7 +195,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Accessibility Service Status Card
+              // 1. Accessibility Service Status Card
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -239,8 +239,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     const SizedBox(height: 8),
                     Text(
                       provider.isAccessibilityActive
-                        ? 'النظام يراقب الشاشة بدقة ويمنع المشتتات فور فتحها مع إطلاق شاشة التسابيح.'
-                        : 'يجب تفعيل خدمة "مسار النور" في إمكانية الوصول بالأندرويد ليعمل الإغلاق القسري الصارم.',
+                        ? 'النظام يراقب الشاشة بدقة ويمنع الوميض ويغلق المشتتات فوراً مع إطلاق مهمة الدوبامين الإيجابية.'
+                        : 'يجب تفعيل خدمة "مسار النور" في إمكانية الوصول بالأندرويد ليعمل الإغلاق الصارم.',
                       style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
                     ),
                     if (!provider.isAccessibilityActive) ...[
@@ -262,9 +262,136 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
 
-              // Active Hours & Toggle Card
+              // 2. Device Admin & Anti-Uninstall Status Card (Requirement 3)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: provider.isDeviceAdminActive
+                      ? const Color(0x263B82F6)
+                      : const Color(0x26D97706),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: provider.isDeviceAdminActive
+                        ? Colors.blueAccent
+                        : Colors.amber,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          provider.isDeviceAdminActive
+                              ? Icons.admin_panel_settings_rounded
+                              : Icons.security_rounded,
+                          color: provider.isDeviceAdminActive
+                              ? Colors.blueAccent
+                              : Colors.amber,
+                          size: 22,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          provider.isDeviceAdminActive
+                              ? 'حماية مدير الجهاز (Device Admin) مفعلة'
+                              : 'حماية مدير الجهاز ضد الحذف غير مفعلة',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      provider.isDeviceAdminActive
+                          ? 'التطبيق محمي ضد المسح أو الإلغاء العادي، ويرصد أي محاولة للدخول لشاشات الإلغاء لإيقافها فوراً.'
+                          : 'فعّل صلاحية مدير الجهاز لتأمين التطبيق ضد أي محاولة لإلغاء تثبيته في لحظات الضعف والتسويف.',
+                      style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
+                    ),
+                    if (!provider.isDeviceAdminActive) ...[
+                      const SizedBox(height: 12),
+                      ElevatedButton.icon(
+                        onPressed: () => provider.requestDeviceAdmin(),
+                        icon: const Icon(Icons.lock_outline_rounded, size: 16),
+                        label: const Text('تفعيل حماية مدير الجهاز الآن'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.amber.shade700,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              // 3. Family Shield DNS & Network Protection Card (Requirement 2)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0F172A),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0x3306B6D4)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.dns_rounded, color: Colors.cyanAccent, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'حماية Family Shield DNS (غلق المنبع)',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'استخدم Private DNS لحجب المواقع والإعلانات الإباحية على كامل الهاتف من منبع الاتصال:',
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.black26,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const SelectableText(
+                        'family.cloudflare-dns.com\nأو CleanBrowsing: family-filter-dns.cleanbrowsing.org',
+                        style: TextStyle(color: Colors.cyanAccent, fontSize: 11, fontFamily: 'monospace'),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    OutlinedButton.icon(
+                      onPressed: () => provider.openDnsSettings(),
+                      icon: const Icon(Icons.settings_ethernet, size: 16, color: Colors.cyanAccent),
+                      label: const Text('فتح إعدادات الـ DNS في الهاتف', style: TextStyle(color: Colors.cyanAccent, fontSize: 12)),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0x4D06B6D4)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              // 4. Active Hours & Toggle Card
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -337,9 +464,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
 
-              // Blocked URLs Header & Action
+              // 5. Blocked URLs Header & Action
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -379,9 +506,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 }).toList(),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
-              // Emergency Simulation Test Button
+              // 6. Dopamine Micro-Task Simulation Button
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -399,10 +526,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   children: [
                     const Row(
                       children: [
-                        Icon(Icons.science_outlined, color: Colors.amber, size: 20),
+                        Icon(Icons.bolt_rounded, color: Colors.amber, size: 22),
                         SizedBox(width: 8),
                         Text(
-                          'محاكاة واختبار رصد الحظر',
+                          'محاكاة شاشة الدوبامين والمهمة المصغرة',
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -413,20 +540,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'جرّب ظهور شاشة الألحان والتسابيح الروحية الطارئة كما تظهر عند محاولة فتح تطبيق محظور.',
+                      'جرّب تجربة الحظر السلسة الجديدة مع المهمة المصغرة وزر «ابدأ الإنجاز الآن» دون أي وميض.',
                       style: TextStyle(color: Colors.white70, fontSize: 12),
                     ),
                     const SizedBox(height: 12),
                     ElevatedButton.icon(
                       onPressed: () {
                         BlockerChannel.triggerEmergencyTest(
-                          'tiktok.com (محاكاة)',
+                          'tiktok.com (محاكاة سلسة)',
                           config.fallbackUrl,
                         );
                       },
                       icon: const Icon(Icons.play_arrow_rounded, color: Colors.black),
                       label: const Text(
-                        'إطلاق شاشة التسابيح والألحان التجريبية',
+                        'إطلاق شاشة إعادة توجيه الدوبامين الآن',
                         style: TextStyle(
                           color: Colors.black,
                           fontWeight: FontWeight.bold,

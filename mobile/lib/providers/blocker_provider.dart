@@ -17,6 +17,7 @@ class BlockerProvider with ChangeNotifier {
       'twitter.com',
       'youtube.com/shorts',
       'reddit.com',
+      'snapchat.com',
     ],
     startTime: '23:00',
     endTime: '07:00',
@@ -25,23 +26,23 @@ class BlockerProvider with ChangeNotifier {
   );
 
   bool _isAccessibilityActive = false;
+  bool _isDeviceAdminActive = false;
   bool _isLoading = true;
 
   BlockerConfig get config => _config;
   bool get isAccessibilityActive => _isAccessibilityActive;
+  bool get isDeviceAdminActive => _isDeviceAdminActive;
   bool get isLoading => _isLoading;
 
   Future<void> init() async {
     _box = await Hive.openBox(boxName);
     
-    // Load persisted config from Hive if available
     final savedData = _box.get(configKey);
     if (savedData != null) {
       if (savedData is Map) {
         _config = BlockerConfig.fromMap(savedData);
       }
     } else {
-      // Save initial defaults to Hive
       await _box.put(configKey, _config.toMap());
     }
 
@@ -54,7 +55,18 @@ class BlockerProvider with ChangeNotifier {
 
   Future<void> checkPermissions() async {
     _isAccessibilityActive = await BlockerChannel.isAccessibilityEnabled();
+    _isDeviceAdminActive = await BlockerChannel.isDeviceAdminActive();
     notifyListeners();
+  }
+
+  Future<void> requestDeviceAdmin() async {
+    await BlockerChannel.requestDeviceAdmin();
+    await Future.delayed(const Duration(seconds: 1));
+    await checkPermissions();
+  }
+
+  Future<void> openDnsSettings() async {
+    await BlockerChannel.openDnsSettings();
   }
 
   Future<void> toggleActive(bool val) async {

@@ -8,6 +8,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import android.widget.Toast
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -21,8 +22,11 @@ class BlockerAccessibilityService : AccessibilityService() {
         const val KEY_END_TIME = "end_time"
         const val KEY_FALLBACK_URL = "fallback_url"
         const val KEY_IS_ACTIVE = "is_active"
+        const val KEY_ANTI_TAMPER_ENABLED = "anti_tamper_enabled"
+        const val KEY_AI_NSFW_ENABLED = "ai_nsfw_enabled"
 
         var isServiceRunning = false
+        var isOverlayShowing = false
         var onBlockedDetectedListener: ((String) -> Unit)? = null
 
         fun updateRules(
@@ -42,6 +46,10 @@ class BlockerAccessibilityService : AccessibilityService() {
                 .putBoolean(KEY_IS_ACTIVE, isActive)
                 .apply()
         }
+
+        fun reportOverlayClosed() {
+            isOverlayShowing = false
+        }
     }
 
     private lateinit var prefs: SharedPreferences
@@ -49,66 +57,153 @@ class BlockerAccessibilityService : AccessibilityService() {
 
     override fun onServiceConnected() {
         super.onServiceConnected()
-        isServiceRunning = true
-        prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        try {
+            isServiceRunning = true
+            isOverlayShowing = false
+            prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        } catch (t: Throwable) {
+            t.printStackTrace()
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         isServiceRunning = false
+        isOverlayShowing = false
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
 
-        // 600ms debounce to strictly catch immediate re-open attempts
-        val now = System.currentTimeMillis()
-        if (now - lastTriggerTime < 600) return
+        try {
+            val packageName = event.packageName?.toString() ?: ""
 
-        val isActive = prefs.getBoolean(KEY_IS_ACTIVE, true)
-        if (!isActive) return
-
-        val startTime = prefs.getString(KEY_START_TIME, "23:00") ?: "23:00"
-        val endTime = prefs.getString(KEY_END_TIME, "07:00") ?: "07:00"
-
-        if (!isCurrentTimeInActiveHours(startTime, endTime)) {
-            return
-        }
-
-        val blockedSet = prefs.getStringSet(
-            KEY_BLOCKED_URLS,
-            setOf("facebook.com", "tiktok.com", "instagram.com", "x.com", "twitter.com", "youtube.com/shorts")
-        ) ?: emptySet()
-
-        val packageName = event.packageName?.toString() ?: ""
-        var detectedBlockedItem: String? = null
-
-        // 1. Direct App Package matching
-        for (item in blockedSet) {
-            val cleanItem = item.lowercase(Locale.ROOT)
-            if (packageName.contains(cleanItem) || isPackageMatchingDomain(packageName, cleanItem)) {
-                detectedBlockedItem = item
-                break
+            // 1. CRITICAL ANTI-FLICKER FIX: Never analyze our own application window!
+            if (packageName.equals("com.masarelnor.app.msar_elnor", ignoreCase = true)) {
+                return
             }
-        }
 
-        // 2. Deep text and URL bar inspection in browser / webview windows
-        if (detectedBlockedItem == null && rootInActiveWindow != null) {
-            val capturedText = extractTextFromNodes(rootInActiveWindow)
+            // 2. CRITICAL ANTI-LOOP FIX: If overlay is actively showing, ignore events to prevent flicker loops
+            if (isOverlayShowing) {
+                return
+            }
+
+            // 3. ANTI-TAMPER & UNINSTALL PROTECTION: Prevent removing app or disabling admin
+            if (handleAntiTamperWatchdog(packageName, event)) {
+                return
+            }
+
+            // 4. Time & Active Rules Check
+            val isActive = prefs.getBoolean(KEY_IS_ACTIVE, true)
+            if (!isActive) return
+
+            val startTime = prefs.getString(KEY_START_TIME, "23:00") ?: "23:00"
+            val endTime = prefs.getString(KEY_END_TIME, "07:00") ?: "07:00"
+
+            if (!isCurrentTimeInActiveHours(startTime, endTime)) {
+                return
+            }
+
+            // Debounce check (800ms)
+            val now = System.currentTimeMillis()
+            if (now - lastTriggerTime < 800) return
+
+            val blockedSet = prefs.getStringSet(
+                KEY_BLOCKED_URLS,
+                setOf("facebook.com", "tiktok.com", "instagram.com", "x.com", "twitter.com", "youtube.com/shorts", "reddit.com")
+            ) ?: emptySet()
+
+            var detectedBlockedItem: String? = null
+
+            // 5. Direct App Package matching
             for (item in blockedSet) {
                 val cleanItem = item.lowercase(Locale.ROOT)
-                if (capturedText.contains(cleanItem)) {
+                if (packageName.contains(cleanItem) || isPackageMatchingDomain(packageName, cleanItem)) {
                     detectedBlockedItem = item
                     break
                 }
             }
-        }
 
-        // 3. Strict Interception: Close Distraction and Launch Spiritual Fallback
-        if (detectedBlockedItem != null) {
-            lastTriggerTime = now
-            executeStrictBlockAndSpiritualRedirect(detectedBlockedItem)
+            // 6. Deep Node Inspection across visible content and URL fields
+            if (detectedBlockedItem == null && rootInActiveWindow != null) {
+                val capturedText = extractTextFromNodes(rootInActiveWindow)
+                
+                // Match blocked list
+                for (item in blockedSet) {
+                    val cleanItem = item.lowercase(Locale.ROOT)
+                    if (capturedText.contains(cleanItem)) {
+                        detectedBlockedItem = item
+                        break
+                    }
+                }
+
+                // AI / Heuristic NSFW and extreme distraction keyword detection
+                if (detectedBlockedItem == null && isExplicitKeywordPresent(capturedText)) {
+                    detectedBlockedItem = "محتوى مشبوه محظور (رصد ذكي)"
+                }
+            }
+
+            // 7. Execute Anti-Flicker Interception with Dopamine Redirect
+            if (detectedBlockedItem != null) {
+                lastTriggerTime = now
+                isOverlayShowing = true
+                executeSmoothDopamineRedirect(detectedBlockedItem)
+            }
+        } catch (t: Throwable) {
+            // Guard against any crash in accessibility service
+            t.printStackTrace()
         }
+    }
+
+    private fun handleAntiTamperWatchdog(packageName: String, event: AccessibilityEvent): Boolean {
+        try {
+            val lowerPkg = packageName.lowercase(Locale.ROOT)
+            val isSettingsOrInstaller = lowerPkg.contains("packageinstaller") ||
+                    lowerPkg.contains("settings") ||
+                    lowerPkg.contains("deviceadmin")
+
+            if (isSettingsOrInstaller && rootInActiveWindow != null) {
+                val screenText = extractTextFromNodes(rootInActiveWindow)
+                val refersToOurApp = screenText.contains("مسار النور") || screenText.contains("msar_elnor")
+
+                if (refersToOurApp) {
+                    val isTamperingAttempt = screenText.contains("إلغاء التثبيت") ||
+                            screenText.contains("uninstall") ||
+                            screenText.contains("إيقاف إجباري") ||
+                            screenText.contains("force stop") ||
+                            screenText.contains("مسح البيانات") ||
+                            screenText.contains("clear data") ||
+                            screenText.contains("إلغاء تفعيل") ||
+                            screenText.contains("deactivate")
+
+                    if (isTamperingAttempt) {
+                        performGlobalAction(GLOBAL_ACTION_HOME)
+                        Handler(Looper.getMainLooper()).post {
+                            Toast.makeText(
+                                applicationContext,
+                                "🛡️ تطبيق مسار النور محمي ضد الإيقاف أو الحذف للحفاظ على مسارك وهدفك!",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                        return true
+                    }
+                }
+            }
+        } catch (t: Throwable) {
+            t.printStackTrace()
+        }
+        return false
+    }
+
+    private fun isExplicitKeywordPresent(text: String): Boolean {
+        val nsfwKeywords = listOf(
+            "porn", "xxx", "sex", "xvideos", "pornhub", "xnxx", "adult", "nude",
+            "إباحي", "جنس", "سكس", "مواقع إباحية", "افلام للكبار", "شيميل"
+        )
+        for (kw in nsfwKeywords) {
+            if (text.contains(kw)) return true
+        }
+        return false
     }
 
     private fun isPackageMatchingDomain(pkg: String, domain: String): Boolean {
@@ -128,49 +223,61 @@ class BlockerAccessibilityService : AccessibilityService() {
     private fun extractTextFromNodes(node: AccessibilityNodeInfo?): String {
         if (node == null) return ""
         val sb = StringBuilder()
-        node.text?.let { sb.append(it.toString().lowercase(Locale.ROOT)).append(" ") }
-        node.contentDescription?.let { sb.append(it.toString().lowercase(Locale.ROOT)).append(" ") }
-        node.viewIdResourceName?.let {
-            if (it.contains("url") || it.contains("address") || it.contains("search") || it.contains("omnibox")) {
-                node.text?.let { t -> sb.append(t.toString().lowercase(Locale.ROOT)).append(" ") }
+        try {
+            node.text?.let { sb.append(it.toString().lowercase(Locale.ROOT)).append(" ") }
+            node.contentDescription?.let { sb.append(it.toString().lowercase(Locale.ROOT)).append(" ") }
+            node.viewIdResourceName?.let {
+                if (it.contains("url") || it.contains("address") || it.contains("search") || it.contains("omnibox") || it.contains("title")) {
+                    node.text?.let { t -> sb.append(t.toString().lowercase(Locale.ROOT)).append(" ") }
+                }
             }
-        }
-        val childCount = node.childCount
-        for (i in 0 until childCount) {
-            try {
+            val count = node.childCount
+            for (i in 0 until count) {
                 val child = node.getChild(i)
                 if (child != null) {
                     sb.append(extractTextFromNodes(child))
                 }
-            } catch (_: Exception) {}
-        }
+            }
+        } catch (_: Throwable) {}
         return sb.toString()
     }
 
-    private fun executeStrictBlockAndSpiritualRedirect(blockedTarget: String) {
-        // Immediate dismissal to home screen
-        performGlobalAction(GLOBAL_ACTION_HOME)
+    private fun executeSmoothDopamineRedirect(blockedTarget: String) {
+        try {
+            // 1. First trigger Home action so the background app is dismissed immediately without flicker
+            performGlobalAction(GLOBAL_ACTION_HOME)
 
-        Handler(Looper.getMainLooper()).postDelayed({
-            onBlockedDetectedListener?.invoke(blockedTarget)
+            // 2. Launch Dopamine Redirect Overlay Activity seamlessly
+            Handler(Looper.getMainLooper()).postDelayed({
+                try {
+                    onBlockedDetectedListener?.invoke(blockedTarget)
 
-            val fallbackUrl = prefs.getString(
-                KEY_FALLBACK_URL,
-                "https://www.youtube.com/watch?v=aripsalin-tasbeha"
-            ) ?: "https://www.youtube.com/watch?v=aripsalin-tasbeha"
+                    val fallbackUrl = prefs.getString(
+                        KEY_FALLBACK_URL,
+                        "https://www.youtube.com/watch?v=aripsalin-tasbeha"
+                    ) ?: "https://www.youtube.com/watch?v=aripsalin-tasbeha"
 
-            val intent = Intent(this, MainActivity::class.java).apply {
-                addFlags(
-                    Intent.FLAG_ACTIVITY_NEW_TASK or
-                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                    Intent.FLAG_ACTIVITY_SINGLE_TOP or
-                    Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-                )
-                putExtra("BLOCKED_TRIGGER", blockedTarget)
-                putExtra("FALLBACK_URL", fallbackUrl)
-            }
-            startActivity(intent)
-        }, 150)
+                    val intent = Intent(this, MainActivity::class.java).apply {
+                        addFlags(
+                            Intent.FLAG_ACTIVITY_NEW_TASK or
+                            Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                            Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                            Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                        )
+                        putExtra("BLOCKED_TRIGGER", blockedTarget)
+                        putExtra("FALLBACK_URL", fallbackUrl)
+                        putExtra("IS_DOPAMINE_REDIRECT", true)
+                    }
+                    startActivity(intent)
+                } catch (t: Throwable) {
+                    isOverlayShowing = false
+                    t.printStackTrace()
+                }
+            }, 200)
+        } catch (t: Throwable) {
+            isOverlayShowing = false
+            t.printStackTrace()
+        }
     }
 
     private fun isCurrentTimeInActiveHours(start: String, end: String): Boolean {
@@ -182,10 +289,8 @@ class BlockerAccessibilityService : AccessibilityService() {
             val endDate = sdf.parse(end) ?: return true
 
             return if (startDate.after(endDate)) {
-                // Crosses midnight (e.g. 23:00 to 07:00)
                 nowDate.after(startDate) || nowDate.before(endDate) || nowDate == startDate
             } else {
-                // Daytime (e.g. 09:00 to 17:00)
                 (nowDate.after(startDate) || nowDate == startDate) && nowDate.before(endDate)
             }
         } catch (e: Exception) {
@@ -193,5 +298,7 @@ class BlockerAccessibilityService : AccessibilityService() {
         }
     }
 
-    override fun onInterrupt() {}
+    override fun onInterrupt() {
+        isOverlayShowing = false
+    }
 }

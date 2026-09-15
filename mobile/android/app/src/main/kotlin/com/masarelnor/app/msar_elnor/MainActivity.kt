@@ -1,5 +1,7 @@
 package com.masarelnor.app.msar_elnor
 
+import android.app.admin.DevicePolicyManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -13,9 +15,14 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity: FlutterActivity() {
     private val CHANNEL = "com.masarelnor.app/blocker"
     private var methodChannel: MethodChannel? = null
+    private lateinit var devicePolicyManager: DevicePolicyManager
+    private lateinit var adminComponent: ComponentName
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        devicePolicyManager = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+        adminComponent = ComponentName(this, MsarDeviceAdminReceiver::class.java)
+
         methodChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
 
         methodChannel?.setMethodCallHandler { call, result ->
@@ -29,6 +36,38 @@ class MainActivity: FlutterActivity() {
                     }
                     startActivity(intent)
                     result.success(true)
+                }
+                "isDeviceAdminActive" -> {
+                    result.success(devicePolicyManager.isAdminActive(adminComponent))
+                }
+                "requestDeviceAdmin" -> {
+                    val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
+                        putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminComponent)
+                        putExtra(
+                            DevicePolicyManager.EXTRA_ADD_EXPLANATION,
+                            "تفعيل صلاحية مدير الجهاز تمنع مسح أو إيقاف تطبيق مسار النور لحماية مسارك وأهدافك."
+                        )
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    startActivity(intent)
+                    result.success(true)
+                }
+                "openDnsSettings" -> {
+                    try {
+                        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            Intent(Settings.ACTION_WIRELESS_SETTINGS).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                        } else {
+                            Intent(Settings.ACTION_SETTINGS).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                        }
+                        startActivity(intent)
+                        result.success(true)
+                    } catch (e: Exception) {
+                        result.success(false)
+                    }
                 }
                 "requestOverlayPermission" -> {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(context)) {
@@ -59,6 +98,10 @@ class MainActivity: FlutterActivity() {
                         fallbackUrl,
                         isActive
                     )
+                    result.success(true)
+                }
+                "reportOverlayClosed" -> {
+                    BlockerAccessibilityService.reportOverlayClosed()
                     result.success(true)
                 }
                 "triggerSpiritualEmergency" -> {

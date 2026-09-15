@@ -38,6 +38,31 @@ class BlockerChannel {
     }
   }
 
+  static Future<bool> isDeviceAdminActive() async {
+    try {
+      final bool? active = await _channel.invokeMethod<bool>('isDeviceAdminActive');
+      return active ?? false;
+    } on PlatformException {
+      return false;
+    }
+  }
+
+  static Future<void> requestDeviceAdmin() async {
+    try {
+      await _channel.invokeMethod('requestDeviceAdmin');
+    } on PlatformException catch (e) {
+      debugPrint('Failed to request device admin: ${e.message}');
+    }
+  }
+
+  static Future<void> openDnsSettings() async {
+    try {
+      await _channel.invokeMethod('openDnsSettings');
+    } on PlatformException catch (e) {
+      debugPrint('Failed to open DNS settings: ${e.message}');
+    }
+  }
+
   static Future<bool> requestOverlayPermission() async {
     try {
       final bool? granted = await _channel.invokeMethod<bool>('requestOverlayPermission');
@@ -52,6 +77,14 @@ class BlockerChannel {
       await _channel.invokeMethod('updateRules', config.toMap());
     } on PlatformException catch (e) {
       debugPrint('Failed to sync rules with native service: ${e.message}');
+    }
+  }
+
+  static Future<void> reportOverlayClosed() async {
+    try {
+      await _channel.invokeMethod('reportOverlayClosed');
+    } on PlatformException catch (e) {
+      debugPrint('Failed to report overlay closed: ${e.message}');
     }
   }
 
