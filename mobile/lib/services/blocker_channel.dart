@@ -21,6 +21,7 @@ class BlockerChannel {
     });
   }
 
+  // 1. Accessibility Service
   static Future<bool> isAccessibilityEnabled() async {
     try {
       final bool? enabled = await _channel.invokeMethod<bool>('isAccessibilityEnabled');
@@ -38,6 +39,7 @@ class BlockerChannel {
     }
   }
 
+  // 2. Device Admin
   static Future<bool> isDeviceAdminActive() async {
     try {
       final bool? active = await _channel.invokeMethod<bool>('isDeviceAdminActive');
@@ -55,6 +57,7 @@ class BlockerChannel {
     }
   }
 
+  // 3. DNS Settings Button
   static Future<void> openDnsSettings() async {
     try {
       await _channel.invokeMethod('openDnsSettings');
@@ -63,6 +66,87 @@ class BlockerChannel {
     }
   }
 
+  // 4. Battery Optimization Whitelist (Anti-Kill 24/7)
+  static Future<bool> isIgnoringBatteryOptimizations() async {
+    try {
+      final bool? ignoring = await _channel.invokeMethod<bool>('isIgnoringBatteryOptimizations');
+      return ignoring ?? false;
+    } on PlatformException {
+      return false;
+    }
+  }
+
+  static Future<void> requestIgnoreBatteryOptimizations() async {
+    try {
+      await _channel.invokeMethod('requestIgnoreBatteryOptimizations');
+    } on PlatformException catch (e) {
+      debugPrint('Failed to request battery optimization ignore: ${e.message}');
+    }
+  }
+
+  // 5. UsageStats (Plan B Watchdog)
+  static Future<bool> isUsageStatsGranted() async {
+    try {
+      final bool? granted = await _channel.invokeMethod<bool>('isUsageStatsGranted');
+      return granted ?? false;
+    } on PlatformException {
+      return false;
+    }
+  }
+
+  static Future<void> requestUsageStatsPermission() async {
+    try {
+      await _channel.invokeMethod('requestUsageStatsPermission');
+    } on PlatformException catch (e) {
+      debugPrint('Failed to request usage stats permission: ${e.message}');
+    }
+  }
+
+  // 6. Plan C: Local VPN
+  static Future<bool> isVpnActive() async {
+    try {
+      final bool? active = await _channel.invokeMethod<bool>('isVpnActive');
+      return active ?? false;
+    } on PlatformException {
+      return false;
+    }
+  }
+
+  static Future<void> startVpnService() async {
+    try {
+      await _channel.invokeMethod('startVpnService');
+    } on PlatformException catch (e) {
+      debugPrint('Failed to start VPN service: ${e.message}');
+    }
+  }
+
+  static Future<void> stopVpnService() async {
+    try {
+      await _channel.invokeMethod('stopVpnService');
+    } on PlatformException catch (e) {
+      debugPrint('Failed to stop VPN service: ${e.message}');
+    }
+  }
+
+  // 7. Foreground Protection Service
+  static Future<bool> isForegroundServiceRunning() async {
+    try {
+      final bool? running = await _channel.invokeMethod<bool>('isForegroundServiceRunning');
+      return running ?? false;
+    } on PlatformException {
+      return false;
+    }
+  }
+
+  static Future<void> startForegroundProtection() async {
+    try {
+      await _channel.invokeMethod('startForegroundProtection');
+    } on PlatformException catch (e) {
+      debugPrint('Failed to start foreground protection: ${e.message}');
+    }
+  }
+
+  // 8. Overlay Permission
   static Future<bool> requestOverlayPermission() async {
     try {
       final bool? granted = await _channel.invokeMethod<bool>('requestOverlayPermission');
@@ -72,6 +156,7 @@ class BlockerChannel {
     }
   }
 
+  // 9. Rules Sync
   static Future<void> syncRules(BlockerConfig config) async {
     try {
       await _channel.invokeMethod('updateRules', config.toMap());

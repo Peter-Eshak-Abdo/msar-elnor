@@ -27,11 +27,17 @@ class BlockerProvider with ChangeNotifier {
 
   bool _isAccessibilityActive = false;
   bool _isDeviceAdminActive = false;
+  bool _isBatteryOptIgnored = false;
+  bool _isUsageStatsGranted = false;
+  bool _isVpnActive = false;
   bool _isLoading = true;
 
   BlockerConfig get config => _config;
   bool get isAccessibilityActive => _isAccessibilityActive;
   bool get isDeviceAdminActive => _isDeviceAdminActive;
+  bool get isBatteryOptIgnored => _isBatteryOptIgnored;
+  bool get isUsageStatsGranted => _isUsageStatsGranted;
+  bool get isVpnActive => _isVpnActive;
   bool get isLoading => _isLoading;
 
   Future<void> init() async {
@@ -56,6 +62,9 @@ class BlockerProvider with ChangeNotifier {
   Future<void> checkPermissions() async {
     _isAccessibilityActive = await BlockerChannel.isAccessibilityEnabled();
     _isDeviceAdminActive = await BlockerChannel.isDeviceAdminActive();
+    _isBatteryOptIgnored = await BlockerChannel.isIgnoringBatteryOptimizations();
+    _isUsageStatsGranted = await BlockerChannel.isUsageStatsGranted();
+    _isVpnActive = await BlockerChannel.isVpnActive();
     notifyListeners();
   }
 
@@ -67,6 +76,28 @@ class BlockerProvider with ChangeNotifier {
 
   Future<void> openDnsSettings() async {
     await BlockerChannel.openDnsSettings();
+  }
+
+  Future<void> requestIgnoreBatteryOptimizations() async {
+    await BlockerChannel.requestIgnoreBatteryOptimizations();
+    await Future.delayed(const Duration(seconds: 1));
+    await checkPermissions();
+  }
+
+  Future<void> requestUsageStats() async {
+    await BlockerChannel.requestUsageStatsPermission();
+    await Future.delayed(const Duration(seconds: 1));
+    await checkPermissions();
+  }
+
+  Future<void> toggleVpn() async {
+    if (_isVpnActive) {
+      await BlockerChannel.stopVpnService();
+    } else {
+      await BlockerChannel.startVpnService();
+    }
+    await Future.delayed(const Duration(milliseconds: 800));
+    await checkPermissions();
   }
 
   Future<void> toggleActive(bool val) async {
