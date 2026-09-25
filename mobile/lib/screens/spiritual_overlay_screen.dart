@@ -34,13 +34,38 @@ class _SpiritualOverlayScreenState extends State<SpiritualOverlayScreen>
     [const Color(0xFF1E293B), const Color(0xFF090D16), const Color(0xFF38BDF8)], // Obsidian Celestial
   ];
 
-  // 2. Scriptures on Chastity and Fleeing Sexual Immorality
+  // 2. CBT Neuroscience Facts on Pornography & Dopamine (NoFap Style)
+  late Map<String, String> _selectedCbtFact;
+  final List<Map<String, String>> _cbtFacts = [
+    {
+      'title': 'وهم وفرط الإثارة (Hyper-Stimulation Illusion)',
+      'body': 'المواد الإباحية لا تقدم شريكاً حقيقياً، بل تخدع المخ بفيض غير طبيعي من الدوبامين يُشبه المخدرات. عقلك يفرز دوبامين للبحث وليس للشبع، مما يتركك دائماً مستنزفاً وفارغاً.',
+      'source': 'Dr. Gary Wilson - Your Brain On Porn',
+    },
+    {
+      'title': 'تآكل الفص الجبهي (Hypofrontality)',
+      'body': 'الاستسلام للإباحية يُعطل قشرة الفص الجبهي (Prefrontal Cortex) المسؤولة عن قوة الإرادة، التركيز، والتخطيط المستقبلي. بالتراجع الآن، أنت تُعيد تنشيط مركز قيادة عقلك وتنقذ ذكاءك البرمجي.',
+      'source': 'Cambridge Neuroscience Journal',
+    },
+    {
+      'title': 'تراكم بروتين دلتا فوس بي (Delta-FosB)',
+      'body': 'كل استجابة للرغبة تبني روابط عصبية إدمانية عبر بروتين Delta-FosB. ولكن كل مرة تصمد فيها لمدة 3 دقائق فقط (Urge Surfing)، يذوب هذا البروتين وتبدأ خلايا مخك بالتشافي التلقائي (Neuroplasticity).',
+      'source': 'Neurobiology of Addiction Research',
+    },
+    {
+      'title': 'انخفاض الدوبامين الأساسي (Dopamine Baseline Crash)',
+      'body': 'المتعة السريعة تعقبها بالضرورة كآبة وفقدان الشغف بالمذاكرة والعمل والمشاريع. الصمود يحفظ مخزون الدوبامين لمشروع تخرجك وبناء مستقبلك المالي.',
+      'source': 'Dr. Andrew Huberman, Stanford Medicine',
+    },
+  ];
+
+  // 3. Scriptures & Coptic Church Fathers on Chastity
   late Map<String, String> _selectedScripture;
   final List<Map<String, String>> _chastityScriptures = [
     {
       'verse': '«اُهْرُبُوا مِنَ الزِّنَى. كُلُّ خَطِيَّةٍ يَفْعَلُهَا الإِنْسَانُ هِيَ خَارِجَةٌ عَنِ الْجَسَدِ، لكِنَّ الَّذِي يَزْنِي يُخْطِئُ إِلَى جَسَدِهِ.»',
       'ref': '١ كورنثوس ٦ : ١٨',
-      'meaning': 'الهروب الفوري هو خط الدفاع الوحيد.. جسدك هيكل للروح القدس.',
+      'meaning': 'الهروب الفوري بوعي هو خط الدفاع الوحيد.. جسدك هيكل للروح القدس.',
     },
     {
       'verse': '«كَيْفَ أَصْنَعُ هَذَا الشَّرَّ الْعَظِيمَ وَأُخْطِئُ إِلَى اللهِ؟»',
@@ -48,35 +73,35 @@ class _SpiritualOverlayScreenState extends State<SpiritualOverlayScreen>
       'meaning': 'النقاء الحقيقي هو استحضار هيبة الله ورفض كسر قلبه المحب.',
     },
     {
-      'verse': '«عَهْدًا قَطَعْتُ لِعَيْنَيَّ، فَكَيْفَ أَتَطَلَّعُ فِي عَذْرَاءَ؟»',
-      'ref': 'أيوب ٣١ : ١',
-      'meaning': 'حراسة النظر هي صمام أمان القلب والنفس.',
+      'verse': '«طُوبَى لأَنْقِيَاءِ الْقَلْبِ، لأَنَّهُمْ يُعَايِنُونَ اللهَ.»',
+      'ref': 'متى ٥ : ٨',
+      'meaning': 'نقاوة قلبك هي النافذة التي ترى بها عمل الله وحكمته في كل أمور حياتك.',
     },
     {
-      'verse': '«لأَنَّ هذِهِ هِيَ إِرَادَةُ اللهِ: قَدَاسَتُكُمْ. أَنْ تَمْتَنِعُوا عَنِ الزِّنَى، أَنْ يَعْرِفَ كُلُّ وَاحِدٍ أَنْ يَقْتَنِيَ إِنَاءَهُ بِقَدَاسَةٍ وَكَرَامَةٍ.»',
-      'ref': '١ تسالونيكي ٤ : ٣ - ٤',
-      'meaning': 'كرامة نفسك وجسدك أغلى من لحظة متعة مسروقة تزول في ثوانٍ.',
+      'verse': '«إِنْ حَارَبَتكَ نَظْرَةٌ أَوْ فِكْرٌ رَدِيءٌ، فَاطْلُبِ اللهَ بِسُرْعَةٍ وَقُلْ: يَا رَبِّي يَسُوعُ أَعِنِّي، فَيَهْرُبَ عَنْكَ الْعَدُوُّ.»',
+      'ref': 'القديس أنطونيوس الكبير كوكب البرية',
+      'meaning': 'الصراخ السريع باسم يسوع المسيح يطرد أي ظلمة فوراً من النفس.',
     },
     {
-      'verse': '«فَوْقَ كُلِّ تَحَفُّظٍ احْفَظْ قَلْبَكَ، لأَنَّ مِنْهُ مَخَارِجَ الْحَيَاةِ.»',
-      'ref': 'الأمثال ٤ : ٢٣',
-      'meaning': 'نقاوة أفكارك تحدد كل مسار حياتك وسلامك الداخلي.',
-    },
-    {
-      'verse': '«لَمْ تُصِبْكُمْ تَجْرِبَةٌ إِلاَّ بَشَرِيَّةٌ. وَلكِنَّ اللهَ أَمِينٌ، الَّذِي لاَ يَدَعُكُمْ تُجَرَّبُونَ فَوْقَ مَا تَسْتَطِيعُونَ، بَلْ سَيَجْعَلُ مَعَ التَّجْرِبَةِ أَيْضًا الْمَنْفَذَ.»',
-      'ref': '١ كورنثوس ١٠ : ١٣',
-      'meaning': 'المنفذ موجود الآن أمامك.. اختر النور وتراجع بوعي.',
+      'verse': '«الشهوة إذا حوربت في بدايتها تلاشت، أما إذا تساهلت معها كبرت وصارت وحشاً يفترس طهارتك وسلامك.»',
+      'ref': 'قداسة البابا شنوده الثالث',
+      'meaning': 'اقطع الفكر في الثواني الأولى قبل أن يتحول إلى فعل يسرق بركتك وسلامك.',
     },
   ];
 
-  // 3. Random Math & IQ Puzzle Generator (Prefrontal Cortex Activation)
-  late String _mathQuestion;
-  late int _mathAnswer;
-  final TextEditingController _answerController = TextEditingController();
-  bool _isAnswerCorrect = false;
-  String? _mathFeedback;
+  // 4. Interactive Urge Surfing Box Breathing (4-4-4-4 for 30 Seconds)
+  int _breathingSecondsLeft = 30;
+  Timer? _breathingTimer;
+  bool _isBreathingActive = false;
+  bool _isBreathingCompleted = false;
+  String _breathingPhaseText = 'استعد للتنفس';
 
-  // 4. Audio Hymn State
+  // 5. Dopamine Alternative Micro-Tasks (Programming & Side Hustles)
+  int _selectedMicroTaskTab = 0; // 0 = Programming, 1 = Side Hustle
+  bool _microTaskSolved = false;
+  int _earnedLightPoints = 0;
+
+  // 6. Audio Hymn State
   bool _isPlayingAudio = false;
   Timer? _audioTimer;
 
@@ -85,14 +110,9 @@ class _SpiritualOverlayScreenState extends State<SpiritualOverlayScreen>
     super.initState();
     final random = Random();
 
-    // Select random theme
     _themeIndex = random.nextInt(_themes.length);
-
-    // Select random scripture
+    _selectedCbtFact = _cbtFacts[random.nextInt(_cbtFacts.length)];
     _selectedScripture = _chastityScriptures[random.nextInt(_chastityScriptures.length)];
-
-    // Generate random IQ/Math puzzle
-    _generateRandomPuzzle(random);
 
     // Setup animations
     _pulseController = AnimationController(
@@ -105,43 +125,52 @@ class _SpiritualOverlayScreenState extends State<SpiritualOverlayScreen>
       duration: const Duration(seconds: 3),
     )..repeat(reverse: true);
 
-    // Autoplay hymn audio for 12-15 seconds
+    // Start 30-sec breathing automatically
+    _startBreathingExercise();
+
+    // Autoplay hymn audio snippet
     _startHymnPlayback();
   }
 
-  void _generateRandomPuzzle(Random random) {
-    final puzzleType = random.nextInt(3);
-    if (puzzleType == 0) {
-      // Two-digit addition
-      final a = 18 + random.nextInt(40);
-      final b = 23 + random.nextInt(50);
-      _mathQuestion = '$a + $b = ؟';
-      _mathAnswer = a + b;
-    } else if (puzzleType == 1) {
-      // Multiplication
-      final a = 6 + random.nextInt(9);
-      final b = 7 + random.nextInt(8);
-      _mathQuestion = '$a × $b = ؟';
-      _mathAnswer = a * b;
-    } else {
-      // Sequence pattern (e.g. 4, 8, 16, ? or 5, 12, 19, ?)
-      final start = 3 + random.nextInt(5);
-      final step = 4 + random.nextInt(6);
-      final seq1 = start;
-      final seq2 = start + step;
-      final seq3 = start + (step * 2);
-      final seq4 = start + (step * 3);
-      _mathQuestion = '$seq1 ، $seq2 ، $seq3 ، [ ؟ ]';
-      _mathAnswer = seq4;
-    }
+  void _startBreathingExercise() {
+    _isBreathingActive = true;
+    _breathingSecondsLeft = 30;
+    _isBreathingCompleted = false;
+
+    _breathingTimer?.cancel();
+    _breathingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        if (_breathingSecondsLeft > 0) {
+          _breathingSecondsLeft--;
+          // Calculate 4-phase cycle: 0-3 Inhale, 4-7 Hold, 8-11 Exhale, 12-15 Rest
+          final cycleSec = (30 - _breathingSecondsLeft) % 16;
+          if (cycleSec < 4) {
+            _breathingPhaseText = 'شهيق عميق بهدوء (٤ ثوانٍ)';
+          } else if (cycleSec < 8) {
+            _breathingPhaseText = 'احبس النفس وركّز في سلامك (٤ ثوانٍ)';
+          } else if (cycleSec < 12) {
+            _breathingPhaseText = 'زفير بطيء يطرد كل اندفاع (٤ ثوانٍ)';
+          } else {
+            _breathingPhaseText = 'ثبات وسكون.. عقلك يستعيد السيطرة (٤ ثوانٍ)';
+          }
+        } else {
+          _isBreathingActive = false;
+          _isBreathingCompleted = true;
+          _breathingPhaseText = 'أحسنت! كُسرت دائرة الدوبامين السلبية، والآن حان وقت البديل الإيجابي!';
+          timer.cancel();
+        }
+      });
+    });
   }
 
   Future<void> _startHymnPlayback() async {
     try {
       setState(() => _isPlayingAudio = true);
 
-      // Stream / Hymn URL: Fr. Mousa Roushdy - Znoby Hmoul
-      // Audio stream or online resource with fail-safe error handling
       const hymnAudioUrl = 'https://archive.org/download/FrMousaRoushdyHymns/ZnobyHmoul_snippet.mp3';
       
       await _audioPlayer.setSourceUrl(hymnAudioUrl).timeout(
@@ -151,7 +180,6 @@ class _SpiritualOverlayScreenState extends State<SpiritualOverlayScreen>
       await _audioPlayer.setVolume(0.85);
       await _audioPlayer.resume();
 
-      // Automatically stop after exactly 12 seconds
       _audioTimer = Timer(const Duration(seconds: 12), () {
         _stopHymnPlayback();
       });
@@ -173,24 +201,9 @@ class _SpiritualOverlayScreenState extends State<SpiritualOverlayScreen>
     }
   }
 
-  void _verifyAnswer() {
-    final text = _answerController.text.trim();
-    final parsed = int.tryParse(text);
-    if (parsed == _mathAnswer) {
-      setState(() {
-        _isAnswerCorrect = true;
-        _mathFeedback = 'رائع! عقلك المنطقي استعاد سيطرته الكاملة (+100 نقطة نور).';
-      });
-      _stopHymnPlayback();
-    } else {
-      setState(() {
-        _mathFeedback = 'إجابة غير صحيحة، ركز جيداً وحاول ثانية!';
-      });
-    }
-  }
-
   void _closeOverlay() {
     _stopHymnPlayback();
+    _breathingTimer?.cancel();
     BlockerChannel.reportOverlayClosed();
     Navigator.of(context).pop();
   }
@@ -206,10 +219,10 @@ class _SpiritualOverlayScreenState extends State<SpiritualOverlayScreen>
   @override
   void dispose() {
     _stopHymnPlayback();
+    _breathingTimer?.cancel();
     _audioPlayer.dispose();
     _pulseController.dispose();
     _glowController.dispose();
-    _answerController.dispose();
     super.dispose();
   }
 
@@ -223,7 +236,7 @@ class _SpiritualOverlayScreenState extends State<SpiritualOverlayScreen>
       child: PopScope(
         canPop: false,
         onPopInvokedWithResult: (didPop, result) {
-          if (_isAnswerCorrect) {
+          if (_isBreathingCompleted || _microTaskSolved) {
             _closeOverlay();
           }
         },
@@ -260,7 +273,7 @@ class _SpiritualOverlayScreenState extends State<SpiritualOverlayScreen>
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
-                              'تم اعتراض: ${widget.interceptedTarget} • درع مسار النور يحفظك',
+                              'تم اعتراض: ${widget.interceptedTarget} ${_earnedLightPoints > 0 ? "• +$_earnedLightPoints نقطة نور" : "• درع مسار النور يحفظك"}',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
@@ -393,15 +406,155 @@ class _SpiritualOverlayScreenState extends State<SpiritualOverlayScreen>
                     ),
                     const SizedBox(height: 20),
 
-                    // Dopamine IQ & Math Brain Redirect
+                    // CBT Neuroscience Message Card (Your Brain On Porn / NoFap)
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(18),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0F172A).withValues(alpha: 0.9),
+                        color: const Color(0xFF0F172A).withValues(alpha: 0.85),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.psychology_rounded, color: Colors.amber, size: 20),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'حقيقة علمية عصبية: ${_selectedCbtFact['title']}',
+                                  style: const TextStyle(
+                                    color: Colors.amber,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _selectedCbtFact['body']!,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              height: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              _selectedCbtFact['source']!,
+                              style: const TextStyle(color: Colors.white38, fontSize: 10, fontStyle: FontStyle.italic),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Interactive Urge Surfing Box Breathing (30 Seconds)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            const Color(0xFF064E3B).withValues(alpha: 0.7),
+                            const Color(0xFF022C22).withValues(alpha: 0.9),
+                          ],
+                        ),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: _isAnswerCorrect ? const Color(0xFF10B981) : Colors.amber.withValues(alpha: 0.3),
+                          color: _isBreathingCompleted ? Colors.greenAccent : const Color(0xFF10B981).withValues(alpha: 0.4),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Row(
+                                children: [
+                                  Icon(Icons.air_rounded, color: Colors.greenAccent, size: 20),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'تمرين تنفس لكسر الاندفاع (Urge Surfing)',
+                                    style: TextStyle(color: Colors.greenAccent, fontSize: 12, fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.black38,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  '$_breathingSecondsLeft ثانية',
+                                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 14),
+
+                          // Animated Breathing Indicator
+                          AnimatedContainer(
+                            duration: const Duration(seconds: 4),
+                            curve: Curves.easeInOut,
+                            width: _isBreathingActive ? 85 : 70,
+                            height: _isBreathingActive ? 85 : 70,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: RadialGradient(
+                                colors: [
+                                  Colors.greenAccent.withValues(alpha: 0.6),
+                                  const Color(0xFF047857),
+                                ],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.greenAccent.withValues(alpha: 0.3),
+                                  blurRadius: 20,
+                                  spreadRadius: 4,
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: Text(
+                                '$_breathingSecondsLeft',
+                                style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            _breathingPhaseText,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Alternative Dopamine & Instant Micro-Task Card
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0F172A),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: _microTaskSolved ? Colors.greenAccent : const Color(0xFF6366F1).withValues(alpha: 0.4),
                         ),
                       ),
                       child: Column(
@@ -410,89 +563,122 @@ class _SpiritualOverlayScreenState extends State<SpiritualOverlayScreen>
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.bolt_rounded, color: Colors.amber, size: 20),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    _selectedMicroTaskTab == 0
+                                        ? 'مهمة برمجية مصغرة (دوبامين إيجابي)'
+                                        : 'مهمة عمل سريع (Side Hustle)',
+                                    style: const TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(
                                   color: Colors.amber.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: const Text(
-                                  'تنشيط الفص الجبهي (Prefrontal Cortex)',
-                                  style: TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.bold),
+                                child: Text(
+                                  '+100 نقطة نور',
+                                  style: const TextStyle(color: Colors.amber, fontSize: 10, fontWeight: FontWeight.bold),
                                 ),
                               ),
-                              const Icon(Icons.psychology_rounded, color: Colors.amber, size: 20),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+
+                          // Toggle Task Type
+                          Row(
+                            children: [
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () => setState(() => _selectedMicroTaskTab = 0),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: _selectedMicroTaskTab == 0 ? const Color(0xFF4F46E5) : Colors.white10,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Center(
+                                      child: Text('كود وبرمجة', style: TextStyle(color: Colors.white, fontSize: 11)),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () => setState(() => _selectedMicroTaskTab = 1),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: _selectedMicroTaskTab == 1 ? const Color(0xFF4F46E5) : Colors.white10,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Center(
+                                      child: Text('عمل حر / AI Shorts', style: TextStyle(color: Colors.white, fontSize: 11)),
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                           const SizedBox(height: 12),
-                          const Text(
-                            'حل هذه المسألة الذهنية لكسر دائرة الدوبامين السلبية فوراً:',
-                            style: TextStyle(color: Colors.white70, fontSize: 12),
-                          ),
-                          const SizedBox(height: 10),
-                          Center(
-                            child: Text(
-                              _mathQuestion,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 2,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 14),
 
-                          if (!_isAnswerCorrect) ...[
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: _answerController,
-                                    keyboardType: TextInputType.number,
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                                    decoration: InputDecoration(
-                                      hintText: 'اكتب الناتج هنا',
-                                      hintStyle: const TextStyle(color: Colors.white38, fontSize: 14),
-                                      filled: true,
-                                      fillColor: Colors.white.withValues(alpha: 0.08),
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide.none,
-                                      ),
-                                    ),
-                                    onSubmitted: (_) => _verifyAnswer(),
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                ElevatedButton(
-                                  onPressed: _verifyAnswer,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: primaryAccent,
-                                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  child: const Text('تحقق', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-                                ),
-                              ],
+                          if (_selectedMicroTaskTab == 0) ...[
+                            const Text(
+                              '💡 التحدي: اكتب كود يفرز مصفوفة الأرقام [9, 2, 7, 4, 1] تصاعدياً في لغة Dart أو Python، أو صف كيف تعمل دالة QuickSort في جملة واحدة:',
+                              style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
+                            ),
+                          ] else ...[
+                            const Text(
+                              '💼 اقتراح سريع: جهز فكرة فيديو YouTube Shorts مدته 40 ثانية بعنوان: «كيف يساعدك الذكاء الاصطناعي على بناء نظام عادات لا يُقهر»، أو اكتب أول سطر في Proposal عميل لبرمجة صفحة هبوط:',
+                              style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
                             ),
                           ],
+                          const SizedBox(height: 12),
 
-                          if (_mathFeedback != null) ...[
-                            const SizedBox(height: 10),
-                            Center(
-                              child: Text(
-                                _mathFeedback!,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: _isAnswerCorrect ? const Color(0xFF10B981) : Colors.redAccent,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                          if (!_microTaskSolved) ...[
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                setState(() {
+                                  _microTaskSolved = true;
+                                  _earnedLightPoints += 100;
+                                });
+                              },
+                              icon: const Icon(Icons.check_circle_outline_rounded, color: Colors.black, size: 16),
+                              label: const Text(
+                                'أتممت المهمة واستبدلت الرغبة بإنجاز (+100 نقطة)',
+                                style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.amber,
+                                minimumSize: const Size(double.infinity, 42),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            ),
+                          ] else ...[
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.4)),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.stars_rounded, color: Colors.greenAccent, size: 18),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'عاش يا بطل! عقلك اختار النمو والإنتاجية بدلاً من الاستنزاف (+100 نقطة نور).',
+                                      style: TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -502,43 +688,33 @@ class _SpiritualOverlayScreenState extends State<SpiritualOverlayScreen>
                     const SizedBox(height: 20),
 
                     // Action Buttons
-                    if (_isAnswerCorrect) ...[
-                      ElevatedButton.icon(
-                        onPressed: _closeOverlay,
-                        icon: const Icon(Icons.check_circle_rounded, color: Colors.black),
-                        label: const Text(
-                          'تم تأكيد اليقظة • العودة لمسار النور',
-                          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 14),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF10B981),
-                          minimumSize: const Size(double.infinity, 50),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        ),
+                    ElevatedButton.icon(
+                      onPressed: _closeOverlay,
+                      icon: const Icon(Icons.check_circle_rounded, color: Colors.black),
+                      label: const Text(
+                        'العودة لمسار النور والتركيز',
+                        style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 14),
                       ),
-                    ] else ...[
-                      OutlinedButton.icon(
-                        onPressed: _openFullHymn,
-                        icon: const Icon(Icons.music_note_rounded, color: Colors.cyanAccent, size: 18),
-                        label: const Text(
-                          'الاستماع للترنيمة الكاملة / صلاة الأجبية',
-                          style: TextStyle(color: Colors.cyanAccent, fontSize: 13, fontWeight: FontWeight.w600),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 46),
-                          side: const BorderSide(color: Color(0x4D06B6D4)),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF10B981),
+                        minimumSize: const Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
-                      const SizedBox(height: 8),
-                      TextButton(
-                        onPressed: _closeOverlay,
-                        child: const Text(
-                          'تجاوز والعودة للشاشة الرئيسية',
-                          style: TextStyle(color: Colors.white38, fontSize: 11),
-                        ),
+                    ),
+                    const SizedBox(height: 10),
+                    OutlinedButton.icon(
+                      onPressed: _openFullHymn,
+                      icon: const Icon(Icons.music_note_rounded, color: Colors.cyanAccent, size: 18),
+                      label: const Text(
+                        'الاستماع للترنيمة الكاملة / صلاة الأجبية',
+                        style: TextStyle(color: Colors.cyanAccent, fontSize: 13, fontWeight: FontWeight.w600),
                       ),
-                    ],
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 46),
+                        side: const BorderSide(color: Color(0x4D06B6D4)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                    ),
                   ],
                 ),
               ),

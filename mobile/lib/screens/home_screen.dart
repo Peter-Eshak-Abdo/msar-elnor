@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../providers/blocker_provider.dart';
 import '../services/blocker_channel.dart';
 import 'spiritual_overlay_screen.dart';
+import 'eisenhower_screen.dart';
+import 'router_guide_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -259,6 +261,26 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               ),
             ],
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.grid_view_rounded, color: Colors.blueAccent),
+              tooltip: 'مدير المهام الديناميكي (أيزنهاور)',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const EisenhowerScreen()),
+                );
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.router_rounded, color: Colors.cyanAccent),
+              tooltip: 'دليل حماية الراوتر والخزينة (Layer 9)',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const RouterGuideScreen()),
+                );
+              },
+            ),
+          ],
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),

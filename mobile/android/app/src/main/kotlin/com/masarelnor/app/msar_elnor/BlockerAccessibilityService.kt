@@ -162,6 +162,19 @@ class BlockerAccessibilityService : AccessibilityService() {
                     lowerPkg.contains("settings") ||
                     lowerPkg.contains("deviceadmin")
 
+            // Layer 6: App Lock (Block dangerous bypass browsers, VPNs, and clone spaces)
+            if (isBypassApp(lowerPkg)) {
+                performGlobalAction(GLOBAL_ACTION_HOME)
+                Handler(Looper.getMainLooper()).post {
+                    Toast.makeText(
+                        applicationContext,
+                        "🚫 هذا التطبيق محظور تماماً ضمن درع مسار النور لمنع تجاوز الحظر الصارم!",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+                return true
+            }
+
             if (isSettingsOrInstaller && rootInActiveWindow != null) {
                 val screenText = extractTextFromNodes(rootInActiveWindow)
                 val refersToOurApp = screenText.contains("مسار النور") || screenText.contains("msar_elnor")
@@ -174,14 +187,16 @@ class BlockerAccessibilityService : AccessibilityService() {
                             screenText.contains("مسح البيانات") ||
                             screenText.contains("clear data") ||
                             screenText.contains("إلغاء تفعيل") ||
-                            screenText.contains("deactivate")
+                            screenText.contains("deactivate") ||
+                            screenText.contains("تعطيل") ||
+                            screenText.contains("إزالة")
 
                     if (isTamperingAttempt) {
                         performGlobalAction(GLOBAL_ACTION_HOME)
                         Handler(Looper.getMainLooper()).post {
                             Toast.makeText(
                                 applicationContext,
-                                "🛡️ تطبيق مسار النور محمي ضد الإيقاف أو الحذف للحفاظ على مسارك وهدفك!",
+                                "🛡️ درع مسار النور محمي بصلاحية مدير الجهاز ولا يمكن إلغاؤه لحفظ مسارك!",
                                 Toast.LENGTH_LONG
                             ).show()
                         }
@@ -195,13 +210,45 @@ class BlockerAccessibilityService : AccessibilityService() {
         return false
     }
 
+    /**
+     * Layer 6: App Lock against unmonitored browsers, proxy/VPN bypassers, and dual space clones.
+     */
+    private fun isBypassApp(pkg: String): Boolean {
+        val bypassPackages = listOf(
+            "org.torproject.torbrowser",
+            "org.torproject.android",
+            "free.vpn",
+            "com.nordvpn.android",
+            "ch.protonvpn.android",
+            "com.expressvpn.vpn",
+            "com.wireguard.android",
+            "hotspotshield",
+            "psiphon",
+            "turbo.vpn",
+            "com.fast.free.unblock.secure.vpn",
+            "io.inbrowser",
+            "com.jeremyfeinstein.slidingmenu.example",
+            "org.iron.browser",
+            "com.lbe.parallel.intl",
+            "com.dualspace.multispace",
+            "com.excelliance.multiaccount"
+        )
+        return bypassPackages.any { pkg.contains(it) }
+    }
+
     private fun isExplicitKeywordPresent(text: String): Boolean {
+        val lowerText = text.lowercase(Locale.ROOT)
         val nsfwKeywords = listOf(
             "porn", "xxx", "sex", "xvideos", "pornhub", "xnxx", "adult", "nude",
-            "إباحي", "جنس", "سكس", "مواقع إباحية", "افلام للكبار", "شيميل"
+            "stripchat", "chaturbate", "onlyfans", "xhamster", "redtube", "brazzers",
+            "rule34", "nhentai", "spankbang", "cam4", "livejasmin", "erome", "heavy-r",
+            "إباحي", "جنس", "سكس", "مواقع إباحية", "افلام للكبار", "شيميل", "نيك",
+            "سكسي", "ميا خليفة", "شرموطة", "افلام جنس", "مقاطع ساخنة", "عري", "سكس عربي",
+            "سكس مترجم", "نسوانجي", "عرب نار", "افلام سكسية", "للكبار فقط", "+18",
+            "nsfw", "erotic", "webcam adult", "hardcore", "milf", "blowjob", "hentai"
         )
         for (kw in nsfwKeywords) {
-            if (text.contains(kw)) return true
+            if (lowerText.contains(kw)) return true
         }
         return false
     }

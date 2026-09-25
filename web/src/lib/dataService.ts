@@ -8,7 +8,16 @@ import {
   deleteDoc,
   updateDoc,
 } from 'firebase/firestore';
-import { Project, Task, Skill, BlockerRule } from '@/types';
+import {
+  Project,
+  Task,
+  Skill,
+  BlockerRule,
+  BlockLog,
+  PersonalizedNotification,
+  RouterSettings,
+  EisenhowerQuadrant,
+} from '@/types';
 
 // Default initial data
 const INITIAL_PROJECTS: Project[] = [
@@ -24,32 +33,96 @@ const INITIAL_TASKS: Task[] = [
   {
     id: 't-1',
     project_id: '11111111-1111-1111-1111-111111111111',
-    task_name: 'إعداد البنية التحتية والمصادقة الآمنة',
+    task_name: 'إعداد البنية التحتية والتحقق الأمني لدرع مسار النور',
     status: 'Completed',
+    quadrant: 'urgent_important',
+    category: 'مشروع التخرج',
+    estimatedMinutes: 60,
+    actualMinutes: 40,
     created_at: new Date().toISOString(),
   },
   {
     id: 't-2',
     project_id: '11111111-1111-1111-1111-111111111111',
-    task_name: 'بناء واجهة لوحة التحكم ERP بـ Next.js و Tailwind',
+    task_name: 'بناء مصفوفة أيزنهاور الديناميكية مع إعادة الجدولة الحية',
     status: 'In Progress',
+    quadrant: 'urgent_important',
+    category: 'شغل وبرمجة',
+    estimatedMinutes: 45,
     created_at: new Date().toISOString(),
   },
   {
     id: 't-3',
     project_id: '11111111-1111-1111-1111-111111111111',
-    task_name: 'دمج مسار الذكاء الاصطناعي لتوليد خطط المشاريع والمهام',
+    task_name: 'صلاة الساعة السادسة بالأجبية ودراسة إصحاح من رسالة كورنثوس الأولى',
     status: 'Pending',
+    quadrant: 'not_urgent_important',
+    category: 'خدمة وكنيسة',
+    estimatedMinutes: 15,
     created_at: new Date().toISOString(),
   },
   {
     id: 't-4',
     project_id: '11111111-1111-1111-1111-111111111111',
-    task_name: 'تجهيز خدمة الـ Accessibility في تطبيق Flutter للحظر الصارم',
+    task_name: 'متابعة أداء محفظة أسهم Thndr (10 آلاف جنيه) وتحليل تقرير البورصة المصرية',
     status: 'Pending',
+    quadrant: 'not_urgent_important',
+    category: 'استثمار Thndr',
+    estimatedMinutes: 20,
     created_at: new Date().toISOString(),
   },
 ];
+
+const INITIAL_BLOCK_LOGS: BlockLog[] = [
+  {
+    id: 'log-1',
+    target: 'pornhub.com',
+    layer: 'Layer 2 & 3 - DNS Sinkhole & Top Sites Block',
+    reason: 'نطاق إباحي رئيسي محظور من المنبع',
+    timestamp: new Date(Date.now() - 3600000).toISOString(),
+    actionTaken: 'إسقاط الاستعلام وتوجيه المستخدم لشاشة CBT والتنفس',
+  },
+  {
+    id: 'log-2',
+    target: 'tiktok.com / Shorts',
+    layer: 'Layer 4 - Accessibility Deep Scan',
+    reason: 'محتوى مشتت مستنزف للدوبامين',
+    timestamp: new Date(Date.now() - 7200000).toISOString(),
+    actionTaken: 'إغلاق التطبيق فوراً والتحويل لمهمة برمجية مصغرة',
+  },
+];
+
+const INITIAL_NOTIFICATIONS: PersonalizedNotification[] = [
+  {
+    id: 'notif-1',
+    title: 'عاش يا باشمهندس! إنجاز مبكر 🚀',
+    body: 'خلصت تاسك الشغل بدري 20 دقيقة! وقت استثمارك الذهني في كود مشروع التخرج لحاسبات ومعلومات دلوقتي.',
+    type: 'graduation',
+    isSent: true,
+  },
+  {
+    id: 'notif-2',
+    title: 'بركة الخدمة والصلاة بالأجبية ⛪',
+    body: 'صلاة سريعة بالأجبية قبل التاسك الجاي ببركة رتبتك كأغنسطس.. ربنا يبارك خدمتك ونقاء فكرك.',
+    type: 'church_service',
+    isSent: false,
+  },
+  {
+    id: 'notif-3',
+    title: 'متابعة استثمارك في Thndr 📈',
+    body: 'محفظتك الاستثمارية (10k ج.م) محتاجة مراجعة سريعة.. بس خلص مذاكرتك وبرمجة الفيتشر الأول يا بطل!',
+    type: 'thndr',
+    isSent: false,
+  },
+];
+
+const INITIAL_ROUTER_SETTINGS: RouterSettings = {
+  model: 'WE - ZXHN H168N / H188A',
+  ip: '192.168.1.1',
+  primaryDns: '185.228.168.168',
+  secondaryDns: '185.228.169.168',
+  isVaultLocked: true,
+};
 
 const INITIAL_SKILLS: Skill[] = [
   {
@@ -201,12 +274,22 @@ export const DataService = {
     return projectId ? tasks.filter((t) => t.project_id === projectId) : tasks;
   },
 
-  async addTask(projectId: string, taskName: string, status: Task['status'] = 'Pending'): Promise<Task> {
+  async addTask(
+    projectId: string,
+    taskName: string,
+    status: Task['status'] = 'Pending',
+    quadrant: EisenhowerQuadrant = 'urgent_important',
+    category: Task['category'] = 'مشروع التخرج',
+    estimatedMinutes: number = 30
+  ): Promise<Task> {
     const newTask: Task = {
       id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `task-${Date.now()}`,
       project_id: projectId,
       task_name: taskName,
       status,
+      quadrant,
+      category,
+      estimatedMinutes,
       created_at: new Date().toISOString(),
     };
 
@@ -226,6 +309,33 @@ export const DataService = {
     const updated = [...tasks, newTask];
     setLocal('tasks', updated);
     return newTask;
+  },
+
+  async completeTaskEarly(taskId: string, actualMinutes: number): Promise<{ savedMinutes: number; updatedTasks: Task[] }> {
+    const tasks = await this.getTasks();
+    const taskIndex = tasks.findIndex((t) => t.id === taskId);
+    let savedMinutes = 0;
+
+    if (taskIndex !== -1) {
+      const target = tasks[taskIndex];
+      const est = target.estimatedMinutes || 30;
+      savedMinutes = Math.max(0, est - actualMinutes);
+
+      target.status = 'Completed';
+      target.actualMinutes = actualMinutes;
+
+      if (isFirebaseConfigured && db) {
+        try {
+          await updateDoc(doc(db, 'tasks', taskId), {
+            status: 'Completed',
+            actualMinutes,
+          });
+        } catch {}
+      }
+    }
+
+    setLocal('tasks', tasks);
+    return { savedMinutes, updatedTasks: tasks };
   },
 
   async updateTaskStatus(taskId: string, status: Task['status']): Promise<void> {
@@ -371,6 +481,95 @@ export const DataService = {
 
     setLocal('blocker_rules', updated);
     return updated;
+  },
+
+  // Block Logs
+  async getBlockLogs(): Promise<BlockLog[]> {
+    if (isFirebaseConfigured && db) {
+      try {
+        const snap = await getDocs(collection(db, 'block_logs'));
+        if (!snap.empty) {
+          return snap.docs.map((d) => d.data() as BlockLog);
+        }
+      } catch {}
+    }
+    return getLocal<BlockLog[]>('block_logs', INITIAL_BLOCK_LOGS);
+  },
+
+  async addBlockLog(target: string, layer: string, reason: string, actionTaken: string): Promise<BlockLog> {
+    const newLog: BlockLog = {
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `log-${Date.now()}`,
+      target,
+      layer,
+      reason,
+      timestamp: new Date().toISOString(),
+      actionTaken,
+    };
+
+    if (isFirebaseConfigured && db) {
+      try {
+        await setDoc(doc(db, 'block_logs', newLog.id), newLog);
+      } catch {}
+    }
+
+    const logs = getLocal<BlockLog[]>('block_logs', INITIAL_BLOCK_LOGS);
+    const updated = [newLog, ...logs];
+    setLocal('block_logs', updated);
+    return newLog;
+  },
+
+  // Personalized Notifications
+  async getNotifications(): Promise<PersonalizedNotification[]> {
+    if (isFirebaseConfigured && db) {
+      try {
+        const snap = await getDocs(collection(db, 'notifications'));
+        if (!snap.empty) {
+          return snap.docs.map((d) => d.data() as PersonalizedNotification);
+        }
+      } catch {}
+    }
+    return getLocal<PersonalizedNotification[]>('notifications', INITIAL_NOTIFICATIONS);
+  },
+
+  async addNotification(notif: Omit<PersonalizedNotification, 'id'>): Promise<PersonalizedNotification> {
+    const newNotif: PersonalizedNotification = {
+      ...notif,
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `notif-${Date.now()}`,
+    };
+
+    if (isFirebaseConfigured && db) {
+      try {
+        await setDoc(doc(db, 'notifications', newNotif.id), newNotif);
+      } catch {}
+    }
+
+    const list = getLocal<PersonalizedNotification[]>('notifications', INITIAL_NOTIFICATIONS);
+    const updated = [newNotif, ...list];
+    setLocal('notifications', updated);
+    return newNotif;
+  },
+
+  // Router Settings & Encrypted Vault
+  async getRouterSettings(): Promise<RouterSettings> {
+    if (isFirebaseConfigured && db) {
+      try {
+        const snap = await getDocs(collection(db, 'router_settings'));
+        if (!snap.empty) {
+          return snap.docs[0].data() as RouterSettings;
+        }
+      } catch {}
+    }
+    return getLocal<RouterSettings>('router_settings', INITIAL_ROUTER_SETTINGS);
+  },
+
+  async updateRouterSettings(settings: RouterSettings): Promise<RouterSettings> {
+    if (isFirebaseConfigured && db) {
+      try {
+        await setDoc(doc(db, 'router_settings', 'current'), settings);
+      } catch {}
+    }
+    setLocal('router_settings', settings);
+    return settings;
   },
 
   // Backup & Restore

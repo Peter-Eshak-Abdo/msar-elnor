@@ -1,0 +1,60 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 1. Tasks Collection (Eisenhower & Project tasks)
+    match /tasks/{taskId} {
+      allow read: if true; // Allows web dashboard and mobile app reading
+      allow write: if request.resource.data.task_name is string &&
+                      request.resource.data.task_name.size() > 0;
+      allow delete: if true;
+    }
+
+    // 2. Block Logs Collection (Security & 10-layer shield audit trail)
+    match /block_logs/{logId} {
+      allow read: if true;
+      allow create: if request.resource.data.target is string &&
+                       request.resource.data.timestamp is string;
+      allow update, delete: if false; // Immutable audit log
+    }
+
+    // 3. User Settings & Blocker Rules
+    match /user_settings/{settingId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // 4. Blocker Rules (Fallback / Central Rules)
+    match /blocker_rules/{ruleId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // 5. Micro Tasks (Dopamine Alternative & Coding Challenges)
+    match /micro_tasks/{taskId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // 6. Notifications Collection (Personalized FCM & Scheduled Reminders)
+    match /notifications/{notificationId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // 7. Projects & Skills Collections
+    match /projects/{projectId} {
+      allow read, write: if true;
+    }
+    
+    match /skills/{skillId} {
+      allow read, write: if true;
+    }
+
+    // 8. Router Settings & Encrypted Vault
+    match /router_settings/{settingId} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}

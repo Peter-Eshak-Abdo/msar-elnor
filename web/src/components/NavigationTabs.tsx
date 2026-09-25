@@ -7,7 +7,10 @@ import {
   GraduationCap, 
   ShieldAlert, 
   Sparkles,
-  Settings
+  Settings,
+  Grid,
+  Router,
+  Bell,
 } from 'lucide-react';
 
 interface NavigationTabsProps {
@@ -33,14 +36,20 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({
       badge: counts.projects,
     },
     {
+      id: 'eisenhower',
+      label: 'مصفوفة أيزنهاور',
+      icon: Grid,
+      badge: counts.tasks,
+      highlight: true,
+    },
+    {
       id: 'tasks',
       label: 'المهام التقنية',
       icon: CheckSquare,
-      badge: counts.tasks,
     },
     {
       id: 'skills',
-      label: 'مهارات المبيعات والتدريب',
+      label: 'مهارات المبيعات',
       icon: GraduationCap,
       badge: counts.skills,
     },
@@ -48,12 +57,21 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({
       id: 'ai-planner',
       label: 'مستشار الذكاء الاصطناعي',
       icon: Sparkles,
-      highlight: true,
     },
     {
       id: 'blocker',
-      label: 'نظام الحظر الصارم',
+      label: 'درع الحظر الصارم',
       icon: ShieldAlert,
+    },
+    {
+      id: 'router-guide',
+      label: 'دليل الراوتر (L9)',
+      icon: Router,
+    },
+    {
+      id: 'notifications',
+      label: 'الإشعارات المخصصة',
+      icon: Bell,
     },
     {
       id: 'settings',

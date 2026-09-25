@@ -49,7 +49,22 @@ class BlockerForegroundService : Service() {
         super.onCreate()
         createNotificationChannel()
         val notification = buildNotification()
-        startForeground(NOTIFICATION_ID, notification)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(
+                    NOTIFICATION_ID,
+                    notification,
+                    android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                )
+            } else {
+                startForeground(NOTIFICATION_ID, notification)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            try {
+                startForeground(NOTIFICATION_ID, notification)
+            } catch (ignored: Exception) {}
+        }
         isServiceRunning = true
         startPlanBWatchdog()
     }
@@ -133,11 +148,25 @@ class BlockerForegroundService : Service() {
     }
 
     private fun checkForegroundAppPlanB() {
-        // Only run Plan B fallback if overlay is NOT showing
-        if (BlockerAccessibilityService.isOverlayShowing) return
-
+        // Layer 10: Fallback Loop (If Accessibility is turned off/killed, VPN cuts off internet)
         val prefs = getSharedPreferences(BlockerAccessibilityService.PREFS_NAME, Context.MODE_PRIVATE)
         val isActive = prefs.getBoolean(BlockerAccessibilityService.KEY_IS_ACTIVE, true)
+
+        if (isActive) {
+            val isAccRunning = BlockerAccessibilityService.isServiceRunning
+            if (!isAccRunning && !MsarVpnService.isKillSwitchActive) {
+                // Engage Fallback Loop Kill Switch!
+                Log.w("BlockerForeground", "Fallback Loop Triggered: Accessibility is dead! Engaging Kill Switch.")
+                MsarVpnService.setKillSwitch(this, true)
+            } else if (isAccRunning && MsarVpnService.isKillSwitchActive) {
+                // Restore normal Family Shield VPN
+                Log.i("BlockerForeground", "Accessibility is restored! Disengaging Kill Switch.")
+                MsarVpnService.setKillSwitch(this, false)
+            }
+        }
+
+        // Only run Plan B fallback if overlay is NOT showing
+        if (BlockerAccessibilityService.isOverlayShowing) return
         if (!isActive) return
 
         val usageStatsManager = getSystemService(Context.USAGE_STATS_SERVICE) as? UsageStatsManager ?: return

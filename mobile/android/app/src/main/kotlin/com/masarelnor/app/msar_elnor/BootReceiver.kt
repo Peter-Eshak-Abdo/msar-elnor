@@ -19,14 +19,25 @@ class BootReceiver : BroadcastReceiver() {
 
         when (action) {
             Intent.ACTION_BOOT_COMPLETED,
+            Intent.ACTION_LOCKED_BOOT_COMPLETED,
             Intent.ACTION_MY_PACKAGE_REPLACED,
             "android.intent.action.QUICKBOOT_POWERON",
             "com.htc.intent.action.QUICKBOOT_POWERON",
             "com.masarelnor.app.RESTART_BLOCKER_SERVICE" -> {
                 try {
+                    // Layer 7: Safe Mode Check
+                    val isSafeMode = context.packageManager.isSafeMode
+                    if (isSafeMode) {
+                        Log.w("MsarBootReceiver", "Layer 7 Warning: Device booted in SAFE MODE!")
+                    }
+
+                    // Start 24/7 Foreground Protection
                     BlockerForegroundService.startService(context)
+
+                    // Start Family DNS VPN automatically
+                    MsarVpnService.startVpn(context)
                 } catch (e: Exception) {
-                    Log.e("MsarBootReceiver", "Failed to start BlockerForegroundService", e)
+                    Log.e("MsarBootReceiver", "Failed to start services on boot", e)
                 }
             }
         }

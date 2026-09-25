@@ -1,15 +1,18 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Project, Task, Skill, BlockerRule, TaskStatus } from '@/types';
+import { Project, Task, Skill, BlockerRule, TaskStatus, EisenhowerQuadrant, PersonalizedNotification, RouterSettings } from '@/types';
 import { DataService } from '@/lib/dataService';
 import { Navbar } from '@/components/Navbar';
 import { NavigationTabs } from '@/components/NavigationTabs';
 import { StatsCards } from '@/components/StatsCards';
 import { ProjectsView } from '@/components/ProjectsView';
 import { TasksView } from '@/components/TasksView';
+import { DynamicEisenhowerView } from '@/components/DynamicEisenhowerView';
 import { SkillsView } from '@/components/SkillsView';
 import { BlockerSettingsView } from '@/components/BlockerSettingsView';
+import { RouterGuideView } from '@/components/RouterGuideView';
+import { PersonalizedNotificationsView } from '@/components/PersonalizedNotificationsView';
 import { AIPlannerView } from '@/components/AIPlannerView';
 import { SettingsView } from '@/components/SettingsView';
 import { AIModal } from '@/components/AIModal';
@@ -26,8 +29,10 @@ export default function DashboardPage() {
     is_active: true,
   });
 
+  const [notifications, setNotifications] = useState<PersonalizedNotification[]>([]);
+  const [routerSettings, setRouterSettings] = useState<RouterSettings | undefined>(undefined);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('projects');
+  const [activeTab, setActiveTab] = useState<string>('eisenhower');
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -35,17 +40,21 @@ export default function DashboardPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [loadedProjects, loadedTasks, loadedSkills, loadedBlocker] = await Promise.all([
+        const [loadedProjects, loadedTasks, loadedSkills, loadedBlocker, loadedNotifs, loadedRouter] = await Promise.all([
           DataService.getProjects(),
           DataService.getTasks(),
           DataService.getSkills(),
           DataService.getBlockerRules(),
+          DataService.getNotifications(),
+          DataService.getRouterSettings(),
         ]);
 
         setProjects(loadedProjects);
         setTasks(loadedTasks);
         setSkills(loadedSkills);
         setBlockerRules(loadedBlocker);
+        setNotifications(loadedNotifs);
+        setRouterSettings(loadedRouter);
 
         if (loadedProjects.length > 0) {
           setSelectedProjectId(loadedProjects[0].id);
@@ -77,10 +86,37 @@ export default function DashboardPage() {
     }
   };
 
-  // Handlers for Tasks
+  // Handlers for Tasks & Eisenhower Matrix
   const handleAddTask = async (projectId: string, taskName: string, status?: TaskStatus) => {
     const created = await DataService.addTask(projectId, taskName, status);
     setTasks((prev) => [...prev, created]);
+  };
+
+  const handleAddEisenhowerTask = async (
+    taskName: string,
+    quadrant: EisenhowerQuadrant,
+    category: Task['category'],
+    estimatedMinutes: number
+  ) => {
+    const projId = selectedProjectId || (projects[0]?.id ?? 'default-proj');
+    const created = await DataService.addTask(projId, taskName, 'Pending', quadrant, category, estimatedMinutes);
+    setTasks((prev) => [...prev, created]);
+  };
+
+  const handleCompleteTaskEarly = async (taskId: string, actualMinutes: number) => {
+    const res = await DataService.completeTaskEarly(taskId, actualMinutes);
+    setTasks([...res.updatedTasks]);
+    return { savedMinutes: res.savedMinutes };
+  };
+
+  const handleAddNotification = async (notif: Omit<PersonalizedNotification, 'id'>) => {
+    const created = await DataService.addNotification(notif);
+    setNotifications((prev) => [created, ...prev]);
+  };
+
+  const handleSaveRouterSettings = async (settings: RouterSettings) => {
+    const saved = await DataService.updateRouterSettings(settings);
+    setRouterSettings(saved);
   };
 
   const handleUpdateTaskStatus = async (taskId: string, status: TaskStatus) => {
@@ -206,6 +242,15 @@ export default function DashboardPage() {
                 />
               )}
 
+              {activeTab === 'eisenhower' && (
+                <DynamicEisenhowerView
+                  tasks={tasks}
+                  onAddTask={handleAddEisenhowerTask}
+                  onCompleteTaskEarly={handleCompleteTaskEarly}
+                  onDeleteTask={handleDeleteTask}
+                />
+              )}
+
               {activeTab === 'skills' && (
                 <SkillsView
                   skills={skills}
@@ -230,6 +275,20 @@ export default function DashboardPage() {
                 <BlockerSettingsView
                   blockerRules={blockerRules}
                   onUpdateRules={handleUpdateBlockerRules}
+                />
+              )}
+
+              {activeTab === 'router-guide' && (
+                <RouterGuideView
+                  initialSettings={routerSettings}
+                  onSaveSettings={handleSaveRouterSettings}
+                />
+              )}
+
+              {activeTab === 'notifications' && (
+                <PersonalizedNotificationsView
+                  notifications={notifications}
+                  onAddNotification={handleAddNotification}
                 />
               )}
 

@@ -128,6 +128,24 @@ class BlockerChannel {
     }
   }
 
+  static Future<bool> isKillSwitchActive() async {
+    try {
+      final bool? active = await _channel.invokeMethod<bool>('isKillSwitchActive');
+      return active ?? false;
+    } on PlatformException {
+      return false;
+    }
+  }
+
+  static Future<bool> isSafeMode() async {
+    try {
+      final bool? safe = await _channel.invokeMethod<bool>('isSafeMode');
+      return safe ?? false;
+    } on PlatformException {
+      return false;
+    }
+  }
+
   // 7. Foreground Protection Service
   static Future<bool> isForegroundServiceRunning() async {
     try {

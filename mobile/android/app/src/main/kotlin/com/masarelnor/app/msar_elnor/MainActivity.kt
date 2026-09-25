@@ -180,6 +180,12 @@ class MainActivity : FlutterActivity() {
                     MsarVpnService.stopVpn(this)
                     result.success(true)
                 }
+                "isKillSwitchActive" -> {
+                    result.success(MsarVpnService.isKillSwitchActive)
+                }
+                "isSafeMode" -> {
+                    result.success(packageManager.isSafeMode)
+                }
 
                 // 7. Foreground Service Management
                 "startForegroundProtection" -> {
